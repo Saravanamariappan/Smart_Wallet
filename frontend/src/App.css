@@ -1,0 +1,62 @@
+/* App.css — component-specific overrides */
+
+/* Smooth number/balance transitions */
+.hero-card-balance,
+.stat-card-value {
+  transition: color 0.2s ease;
+}
+
+/* QR code container centering */
+.qr-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition-slow), border-color var(--transition-slow);
+}
+
+body.dark-mode .qr-container {
+  background: #ffffff;
+  /* keep QR white even in dark mode for scannability */
+  border-color: #e2e8f0;
+}
+
+/* Progress bar inside toast */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  animation: toastProgress linear forwards;
+}
+
+.toast-progress-success {
+  background: var(--success);
+}
+
+.toast-progress-error {
+  background: var(--danger);
+}
+
+.toast-progress-warning {
+  background: var(--warning);
+}
+
+.toast-progress-info {
+  background: var(--info);
+}
+
+@keyframes toastProgress {
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
+}
