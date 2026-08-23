@@ -2,23 +2,25 @@ import React, { useState, useEffect } from "react";
 import {
     ExternalLink,
     Search,
-    Filter,
     ArrowUpRight,
     ArrowDownLeft,
     Coins,
     RefreshCw,
-    Activity,
+    X,
+    Clock,
 } from "lucide-react";
 import { getTransactions } from "../services/api.js";
-import { formatAddress, formatBalance } from "../utils/format.js";
+import { formatAddress } from "../utils/format.js";
 import { SMART_WALLET_ADDRESS } from "../config/wallet.js";
+import { PetalIcon, SunburstShape } from "../components/DecorativePetal.jsx";
+import StyledButton from "../components/StyledButton.jsx";
 
-function getStatusClass(status) {
+function getStatusBadgeClass(status) {
     const isSuccess = status === "confirmed" || status === "success" || status === 1;
     const isError = status === "failed" || status === 0;
-    if (isSuccess) return "badge badge-success";
-    if (isError) return "badge badge-danger";
-    return "badge badge-warning";
+    if (isSuccess) return "status-chip-confirmed";
+    if (isError) return "status-chip-failed";
+    return "status-chip-pending";
 }
 
 function getStatusLabel(status) {
@@ -62,7 +64,7 @@ export default function Transactions({ backendConnected, addToast }) {
             }
         } catch (error) {
             console.error("Error loading transactions:", error);
-            addToast({ title: "Database Error", message: "Failed to reload transaction logs.", type: "error" });
+            addToast({ title: "Database Error", message: "Failed to reload transaction logs from backend.", type: "error" });
         } finally { setLoading(false); setRefreshing(false); }
     };
 
@@ -72,9 +74,9 @@ export default function Transactions({ backendConnected, addToast }) {
         if (query) {
             const q = query.toLowerCase();
             result = result.filter(tx =>
-                tx.tx_hash.toLowerCase().includes(q) ||
-                tx.to_address.toLowerCase().includes(q) ||
-                tx.from_address.toLowerCase().includes(q)
+                (tx.tx_hash && tx.tx_hash.toLowerCase().includes(q)) ||
+                (tx.to_address && tx.to_address.toLowerCase().includes(q)) ||
+                (tx.from_address && tx.from_address.toLowerCase().includes(q))
             );
         }
         setFilteredTransactions(result);
@@ -86,174 +88,223 @@ export default function Transactions({ backendConnected, addToast }) {
     const handleRefresh = () => { setRefreshing(true); fetchTransactionsList(true); };
 
     const FILTER_TABS = [
-        { key: "ALL", label: "All" },
-        { key: "SEND", label: "Send" },
-        { key: "RECEIVE", label: "Receive" },
-        { key: "TOKEN_SEND", label: "Tokens" },
+        { key: "ALL", label: "All Records" },
+        { key: "SEND", label: "Sent" },
+        { key: "RECEIVE", label: "Received" },
+        { key: "TOKEN_SEND", label: "ERC-20 Tokens" },
     ];
 
     return (
-        <div className="page-enter space-y-6">
+        <div className="page-enter verdara-transactions-page">
             {/* Header */}
-            <div className="flex items-center justify-between" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+            <div className="verdara-page-header">
                 <div>
-                    <h1 className="m-0">Transactions</h1>
-                    <p className="page-subtitle">On-chain operations recorded in the database.</p>
+                    <div className="verdara-page-tag font-rakkas">
+                        <PetalIcon size={13} color="var(--primary-dark)" />
+                        <span>AUDIT LEDGER</span>
+                    </div>
+                    <h1 className="verdara-page-title font-merriweather">
+                        Transactions
+                    </h1>
+                    <p className="verdara-page-subtitle font-rakkas">
+                        On-chain operations recorded in the database.
+                    </p>
                 </div>
-                <button onClick={handleRefresh} disabled={loading || refreshing} className="btn btn-secondary btn-sm" style={{ width: 'auto' }}>
-                    <RefreshCw style={{ width: 14, height: 14 }} className={refreshing ? "animate-spin" : ""} />
-                    Refresh
-                </button>
+                <StyledButton
+                    onClick={handleRefresh}
+                    disabled={loading || refreshing}
+                >
+                    <RefreshCw style={{ width: 14, height: 14, marginRight: "6px" }} className={refreshing ? "animate-spin text-forest" : ""} />
+                    Refresh List
+                </StyledButton>
             </div>
 
-            {/* Search + Filter bar */}
-            <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="relative flex-1" style={{ minWidth: 200 }}>
-                    <Search className="form-input-icon-left" style={{ width: 15, height: 15 }} />
+            {/* Filter & Search Bar */}
+            <div className="verdara-filter-bar">
+                <div className="verdara-search-wrap">
+                    <Search className="verdara-search-icon" style={{ width: 16, height: 16 }} />
                     <input
                         type="text"
-                        placeholder="Search by address or hash..."
+                        placeholder="Search by address or transaction hash..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="form-input form-input-with-icon-left"
-                        style={{ padding: '0.625rem 1rem 0.625rem 2.25rem', fontSize: '0.8125rem' }}
+                        className="verdara-search-input font-script"
+                        style={{ fontSize: "1.05rem" }}
                     />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery("")}
+                            className="verdara-search-clear font-sans"
+                            aria-label="Clear search"
+                        >
+                            ✕
+                        </button>
+                    )}
                 </div>
-                <div className="flex items-center gap-2">
-                    <Filter style={{ width: 15, height: 15, color: 'var(--text-muted)', flexShrink: 0 }} />
-                    <div className="filter-tabs">
-                        {FILTER_TABS.map(tab => (
-                            <button
-                                key={tab.key}
-                                onClick={() => setFilterType(tab.key)}
-                                className={`filter-tab${filterType === tab.key ? ' active' : ''}`}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
+
+                <div className="verdara-tab-group">
+                    {FILTER_TABS.map((tab) => (
+                        <button
+                            key={tab.key}
+                            onClick={() => setFilterType(tab.key)}
+                            className={`verdara-tab-btn font-sans ${filterType === tab.key ? 'active' : ''}`}
+                        >
+                            <span>{tab.label}</span>
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            {/* Transaction list */}
+            {/* Content List */}
             {loading ? (
-                <div className="flex items-center justify-center" style={{ minHeight: 280 }}>
-                    <div className="spinner" />
+                <div className="verdara-loading-container">
+                    <div className="verdara-spinner-seal">
+                        <PetalIcon size={36} color="var(--primary-dark)" className="animate-spin-slow" />
+                    </div>
+                    <p className="verdara-loading-text font-rakkas">Loading transaction records...</p>
+                </div>
+            ) : filteredTransactions.length === 0 ? (
+                <div className="verdara-empty-ledger">
+                    <div className="verdara-empty-icon-wrap">
+                        <SunburstShape size={80} color="#143A28" opacity={0.15} />
+                    </div>
+                    <p className="verdara-empty-title font-merriweather">No activity yet</p>
+                    <p className="verdara-empty-desc font-rakkas">
+                        {backendConnected
+                            ? (searchQuery || filterType !== "ALL"
+                                ? "No transaction records matched your search query or filter."
+                                : "The vault transaction ledger is currently empty.")
+                            : "Backend is offline — transaction history unavailable."}
+                    </p>
                 </div>
             ) : (
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                    {filteredTransactions.length === 0 ? (
-                        <div className="empty-state">
-                            <div className="empty-state-icon">
-                                <Activity style={{ width: 26, height: 26 }} />
-                            </div>
-                            <p className="empty-state-title">No transactions found</p>
-                            <p className="empty-state-desc">
-                                {backendConnected
-                                    ? searchQuery ? "Try a different search query." : "No matching transactions."
-                                    : "Backend is offline — history unavailable."}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="divide-y">
-                            {filteredTransactions.map((tx) => {
-                                const isReceive = tx.transaction_type === "RECEIVE" || tx.transaction_type === "DEPOSIT";
-                                const isToken = tx.transaction_type === "TOKEN_SEND";
-                                return (
-                                    <div
-                                        key={tx.id || tx.tx_hash}
-                                        onClick={() => setSelectedTx(tx)}
-                                        className="flex items-center justify-between"
-                                        style={{ padding: '0.875rem 1.5rem', cursor: 'pointer', transition: 'background-color 0.15s ease' }}
-                                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-elevated)'}
-                                        onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`tx-icon-badge ${isReceive ? 'tx-icon-badge-receive' : isToken ? 'tx-icon-badge-token' : 'tx-icon-badge-send'}`}>
-                                                {isReceive
-                                                    ? <ArrowDownLeft style={{ width: 17, height: 17 }} />
-                                                    : isToken
-                                                        ? <Coins style={{ width: 17, height: 17 }} />
-                                                        : <ArrowUpRight style={{ width: 17, height: 17 }} />
-                                                }
-                                            </div>
-                                            <div style={{ minWidth: 0 }}>
-                                                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.125rem' }}>
-                                                    {isToken ? "Send Token (ERC-20)" : isReceive ? "Receive ETH" : "Send ETH"}
-                                                </div>
-                                                <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
-                                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>
-                                                        {formatAddress(tx.tx_hash)}
-                                                    </span>
-                                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>·</span>
-                                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>
-                                                        {relativeTime(tx.created_at)}
-                                                    </span>
-                                                </div>
-                                            </div>
+                <div className="verdara-tx-cards-stack">
+                    {filteredTransactions.map((tx) => {
+                        const isReceive = tx.transaction_type === "RECEIVE" || tx.transaction_type === "DEPOSIT";
+                        const isToken = tx.transaction_type === "TOKEN_SEND";
+                        const typeClass = isReceive ? "tx-type-receive" : isToken ? "tx-type-token" : "tx-type-send";
+
+                        return (
+                            <div
+                                key={tx.id || tx.tx_hash}
+                                onClick={() => setSelectedTx(tx)}
+                                className={`verdara-tx-card ${typeClass}`}
+                            >
+                                <div className="verdara-tx-card-left">
+                                    <div className="verdara-tx-card-icon-box">
+                                        {isReceive ? (
+                                            <ArrowDownLeft style={{ width: 17, height: 17 }} />
+                                        ) : isToken ? (
+                                            <Coins style={{ width: 17, height: 17 }} />
+                                        ) : (
+                                            <ArrowUpRight style={{ width: 17, height: 17 }} />
+                                        )}
+                                    </div>
+                                    <div className="verdara-tx-card-meta">
+                                        <div className="flex items-center gap-2">
+                                            <span className="verdara-tx-card-title font-merriweather">
+                                                {isToken ? "Token Send" : isReceive ? "Receive ETH" : "Send ETH"}
+                                            </span>
+                                            {tx.created_at && (
+                                                <span className="verdara-tx-time-badge font-rakkas">
+                                                    <Clock style={{ width: 10, height: 10 }} />
+                                                    {relativeTime(tx.created_at)}
+                                                </span>
+                                            )}
                                         </div>
-                                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                            <div style={{ fontSize: '0.875rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: isReceive ? 'var(--success)' : 'var(--text-main)', marginBottom: '0.25rem' }}>
-                                                {isReceive ? '+' : '−'}{tx.amount} {tx.token_address ? 'Tokens' : 'ETH'}
-                                            </div>
-                                            <span className={getStatusClass(tx.status)}>{getStatusLabel(tx.status)}</span>
+                                        <div className="verdara-tx-card-hash font-script" style={{ fontSize: "1.05rem" }}>
+                                            <span>Hash:</span> {formatAddress(tx.tx_hash)}
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                                </div>
+
+                                <div className="verdara-tx-card-right">
+                                    <div className="verdara-tx-card-amount font-merriweather">
+                                        <span className="verdara-tx-sign">{isReceive ? "+" : "−"}</span>
+                                        <span className="verdara-tx-val">{tx.amount}</span>
+                                        <span className="verdara-tx-unit">{tx.token_address ? "Tokens" : "ETH"}</span>
+                                    </div>
+                                    <div className="verdara-tx-card-chip-row">
+                                        <span className={`status-chip ${getStatusBadgeClass(tx.status)}`}>
+                                            {getStatusLabel(tx.status)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 
-            {/* Detail modal */}
+            {/* Modal Detail */}
             {selectedTx && (
-                <div className="modal-overlay" onClick={() => setSelectedTx(null)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3 style={{ margin: 0, fontSize: '0.9375rem' }}>Transaction Details</h3>
-                            <button className="modal-close-btn" onClick={() => setSelectedTx(null)}>✕</button>
+                <div className="verdara-modal-overlay" onClick={() => setSelectedTx(null)}>
+                    <div className="verdara-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="verdara-modal-header">
+                            <div>
+                                <h3 className="verdara-modal-title font-merriweather">Transaction Details</h3>
+                            </div>
+                            <button
+                                className="verdara-modal-close-btn"
+                                onClick={() => setSelectedTx(null)}
+                                aria-label="Close modal"
+                            >
+                                <X style={{ width: 18, height: 18 }} />
+                            </button>
                         </div>
-                        <div className="modal-body">
-                            <div className="modal-detail-row">
-                                <span className="modal-detail-label">Type</span>
-                                <span className="modal-detail-value" style={{ fontFamily: 'var(--font-sans)' }}>{selectedTx.transaction_type}</span>
+
+                        <div className="verdara-modal-body">
+                            <div className="verdara-modal-row">
+                                <span className="verdara-modal-label font-rakkas">Type</span>
+                                <span className="verdara-modal-value font-merriweather font-bold">
+                                    {selectedTx.transaction_type}
+                                </span>
                             </div>
-                            <div className="modal-detail-row">
-                                <span className="modal-detail-label">Amount</span>
-                                <span className="modal-detail-value">{selectedTx.amount} {selectedTx.token_address ? "ERC-20" : "ETH"}</span>
+
+                            <div className="verdara-modal-row">
+                                <span className="verdara-modal-label font-rakkas">Amount</span>
+                                <span className="verdara-modal-value font-merriweather text-lg font-bold">
+                                    {selectedTx.amount} {selectedTx.token_address ? "ERC-20" : "ETH"}
+                                </span>
                             </div>
-                            <div className="modal-detail-row">
-                                <span className="modal-detail-label">Status</span>
-                                <span className={getStatusClass(selectedTx.status)}>{getStatusLabel(selectedTx.status)}</span>
+
+                            <div className="verdara-modal-row">
+                                <span className="verdara-modal-label font-rakkas">Status</span>
+                                <span className={`status-chip ${getStatusBadgeClass(selectedTx.status)}`}>
+                                    {getStatusLabel(selectedTx.status)}
+                                </span>
                             </div>
-                            <div className="modal-detail-row" style={{ flexDirection: 'column', gap: '0.25rem' }}>
-                                <span className="modal-detail-label">Sender</span>
-                                <span className="break-all" style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{selectedTx.from_address}</span>
-                            </div>
-                            <div className="modal-detail-row" style={{ flexDirection: 'column', gap: '0.25rem' }}>
-                                <span className="modal-detail-label">Receiver</span>
-                                <span className="break-all" style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{selectedTx.to_address}</span>
-                            </div>
-                            {selectedTx.token_address && (
-                                <div className="modal-detail-row" style={{ flexDirection: 'column', gap: '0.25rem' }}>
-                                    <span className="modal-detail-label">Token Contract</span>
-                                    <span className="break-all" style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{selectedTx.token_address}</span>
+
+                            <div className="verdara-modal-block">
+                                <span className="verdara-modal-label font-rakkas">Sender (From)</span>
+                                <div className="verdara-modal-mono-badge font-script" style={{ fontSize: "1.05rem" }}>
+                                    {selectedTx.from_address}
                                 </div>
-                            )}
-                            <div className="modal-detail-row" style={{ flexDirection: 'column', gap: '0.25rem' }}>
-                                <span className="modal-detail-label">Hash</span>
-                                <span className="break-all" style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--primary)' }}>{selectedTx.tx_hash}</span>
                             </div>
+
+                            <div className="verdara-modal-block">
+                                <span className="verdara-modal-label font-rakkas">Receiver (To)</span>
+                                <div className="verdara-modal-mono-badge font-script" style={{ fontSize: "1.05rem" }}>
+                                    {selectedTx.to_address}
+                                </div>
+                            </div>
+
+                            <div className="verdara-modal-block">
+                                <span className="verdara-modal-label font-rakkas">Transaction Hash</span>
+                                <div className="verdara-modal-mono-badge font-script text-forest" style={{ fontSize: "1.05rem" }}>
+                                    {selectedTx.tx_hash}
+                                </div>
+                            </div>
+
                             {selectedTx.tx_hash && (
                                 <a
                                     href={`https://sepolia.etherscan.io/tx/${selectedTx.tx_hash}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ marginTop: '1rem', width: '100%', textDecoration: 'none', justifyContent: 'center' }}
+                                    className="verdara-modal-explorer-btn font-sans"
                                 >
-                                    View on Sepolia Explorer <ExternalLink style={{ width: 13, height: 13 }} />
+                                    <span>View on Sepolia Explorer</span>
+                                    <ExternalLink style={{ width: 14, height: 14 }} />
                                 </a>
                             )}
                         </div>

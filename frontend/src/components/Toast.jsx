@@ -1,30 +1,39 @@
 import React, { useEffect, useRef } from "react";
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from "lucide-react";
+import { PetalIcon } from "./DecorativePetal.jsx";
 
 const TYPE_CONFIG = {
     success: {
         icon: CheckCircle2,
-        iconColor: "var(--success)",
-        progressClass: "toast-progress-success",
-        cls: "toast-success",
+        iconColor: "#143A28",
+        bgBadge: "var(--accent-sage)",
+        badgeBorder: "#143A28",
+        progressColor: "var(--accent-sage)",
+        cls: "toast-verdara-success",
     },
     error: {
         icon: AlertCircle,
-        iconColor: "var(--danger)",
-        progressClass: "toast-progress-error",
-        cls: "toast-error",
+        iconColor: "#FFFFFF",
+        bgBadge: "var(--primary-dark)",
+        badgeBorder: "var(--accent-sage)",
+        progressColor: "var(--accent-sage)",
+        cls: "toast-verdara-error",
     },
     warning: {
         icon: AlertTriangle,
-        iconColor: "var(--warning)",
-        progressClass: "toast-progress-warning",
-        cls: "toast-warning",
+        iconColor: "#143A28",
+        bgBadge: "var(--accent-sage)",
+        badgeBorder: "#143A28",
+        progressColor: "var(--accent-sage)",
+        cls: "toast-verdara-warning",
     },
     info: {
         icon: Info,
-        iconColor: "var(--info)",
-        progressClass: "toast-progress-info",
-        cls: "toast-info",
+        iconColor: "#143A28",
+        bgBadge: "var(--accent-sage)",
+        badgeBorder: "#143A28",
+        progressColor: "var(--accent-sage)",
+        cls: "toast-verdara-info",
     },
 };
 
@@ -35,7 +44,6 @@ export function Toast({ toast, onClose }) {
     useEffect(() => {
         const timer = setTimeout(() => onClose(toast.id), duration);
 
-        // animate progress bar
         if (progressRef.current) {
             progressRef.current.style.animationDuration = `${duration}ms`;
         }
@@ -47,32 +55,30 @@ export function Toast({ toast, onClose }) {
     const Icon = cfg.icon;
 
     return (
-        <div className={`toast ${cfg.cls}`} role="alert">
-            {/* Coloured left-border is handled by .toast-success etc in CSS */}
-            <div className="toast-icon">
-                <Icon style={{ width: 18, height: 18, color: cfg.iconColor }} />
+        <div className={`toast-verdara ${cfg.cls}`} role="alert">
+            <div className="toast-verdara-icon" style={{ backgroundColor: cfg.bgBadge }}>
+                <Icon style={{ width: 17, height: 17, color: cfg.iconColor }} />
             </div>
 
-            <div className="toast-body">
-                <p className="toast-title">{toast.title}</p>
+            <div className="toast-verdara-body">
+                <p className="toast-verdara-title">{toast.title}</p>
                 {toast.message && (
-                    <p className="toast-message">{toast.message}</p>
+                    <p className="toast-verdara-message">{toast.message}</p>
                 )}
             </div>
 
             <button
                 onClick={() => onClose(toast.id)}
-                className="toast-close"
+                className="toast-verdara-close"
                 aria-label="Dismiss notification"
             >
-                <X style={{ width: 15, height: 15 }} />
+                <X style={{ width: 14, height: 14 }} />
             </button>
 
-            {/* Auto-dismiss progress bar */}
             <div
                 ref={progressRef}
-                className={`toast-progress ${cfg.progressClass}`}
-                style={{ animationDuration: `${duration}ms` }}
+                className="toast-verdara-progress"
+                style={{ backgroundColor: cfg.progressColor, animationDuration: `${duration}ms` }}
             />
         </div>
     );
@@ -81,7 +87,7 @@ export function Toast({ toast, onClose }) {
 export function ToastContainer({ toasts, onClose }) {
     if (toasts.length === 0) return null;
     return (
-        <div className="toast-container" aria-live="assertive">
+        <div className="toast-verdara-container" aria-live="assertive">
             {toasts.map((toast) => (
                 <Toast key={toast.id} toast={toast} onClose={onClose} />
             ))}

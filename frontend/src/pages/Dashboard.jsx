@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-    Wallet,
     ArrowUpRight,
     ArrowDownLeft,
     Coins,
@@ -11,18 +10,22 @@ import {
     Check,
     RefreshCw,
     Activity,
+    Lock,
+    X,
 } from "lucide-react";
 import { formatAddress, formatBalance } from "../utils/format.js";
 import { getTransactions, getWalletInfo } from "../services/api.js";
 import { getSmartWalletBalance } from "../services/blockchain.js";
 import { SMART_WALLET_ADDRESS } from "../config/wallet.js";
+import { SunburstShape, PetalIcon } from "../components/DecorativePetal.jsx";
+import StyledButton from "../components/StyledButton.jsx";
 
 function getStatusBadgeClass(status) {
     const isSuccess = status === "confirmed" || status === "success" || status === 1;
     const isError = status === "failed" || status === 0;
-    if (isSuccess) return "badge badge-success";
-    if (isError) return "badge badge-danger";
-    return "badge badge-warning";
+    if (isSuccess) return "status-chip-confirmed";
+    if (isError) return "status-chip-failed";
+    return "status-chip-pending";
 }
 
 function getStatusLabel(status) {
@@ -101,7 +104,7 @@ export default function Dashboard({
     const handleCopy = () => {
         navigator.clipboard.writeText(SMART_WALLET_ADDRESS);
         setCopied(true);
-        addToast({ title: "Copied!", message: "Contract address copied to clipboard.", type: "success", duration: 2000 });
+        addToast({ title: "Address Copied", message: "S Wallet contract address copied to clipboard.", type: "success", duration: 2500 });
         setTimeout(() => setCopied(false), 2000);
     };
 
@@ -111,210 +114,262 @@ export default function Dashboard({
     const usdString = usdValue !== null ? `$${formatBalance(usdValue, 2)}` : null;
 
     return (
-        <div className="page-enter space-y-6">
-            {/* Page header */}
-            <div className="flex items-center justify-between" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="page-enter verdara-dashboard-page">
+            {/* Page Header */}
+            <div className="verdara-page-header">
                 <div>
-                    <h1 className="m-0">Dashboard</h1>
-                    <p className="page-subtitle">Monitor balance, transactions, and ERC-20 assets.</p>
+                    <div className="verdara-page-tag font-rakkas">
+                        <PetalIcon size={14} color="var(--primary-dark)" />
+                        <span>S WALLET TREASURY</span>
+                    </div>
+                    <h1 className="verdara-page-title font-merriweather">
+                        Dashboard
+                    </h1>
+                    <p className="verdara-page-subtitle font-rakkas">
+                        Monitor balance, transaction logs, and manage configured ERC-20 assets.
+                    </p>
                 </div>
-                <button
-                    onClick={handleRefresh}
-                    disabled={loading || refreshing}
-                    className="btn btn-secondary btn-sm"
-                    style={{ width: 'auto' }}
-                >
-                    <RefreshCw style={{ width: 14, height: 14 }} className={refreshing ? "animate-spin text-primary" : ""} />
-                    Refresh
-                </button>
+                <div className="verdara-header-actions-bar">
+                    <StyledButton
+                        onClick={handleRefresh}
+                        disabled={loading || refreshing}
+                        title="Reload balances and logs"
+                    >
+                        <RefreshCw style={{ width: 14, height: 14, marginRight: "6px" }} className={refreshing ? "animate-spin text-forest" : ""} />
+                        Refresh Dashboard
+                    </StyledButton>
+                </div>
             </div>
 
             {loading ? (
-                <div className="flex items-center justify-center" style={{ minHeight: 320 }}>
-                    <div className="spinner" />
+                <div className="verdara-loading-container">
+                    <div className="verdara-spinner-seal">
+                        <PetalIcon size={44} color="var(--primary-dark)" className="animate-spin-slow" />
+                    </div>
+                    <p className="verdara-loading-text font-rakkas">Synchronizing S Wallet blockchain state...</p>
                 </div>
             ) : (
                 <>
-                    {/* Hero ETH balance card */}
-                    <div className="hero-card">
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                            <div className="flex items-center justify-between" style={{ marginBottom: '0.5rem' }}>
-                                <span className="hero-card-label">Smart Wallet Balance</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#86efac', display: 'inline-block', animation: 'pulse-dot 2s infinite' }} />
-                                    <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>Live</span>
+                    {/* Hero Card: Total ETH Balance */}
+                    <div className="verdara-hero-card">
+                        <div className="verdara-hero-watermark">
+                            <SunburstShape size={320} color="#C8D6B4" opacity={0.08} />
+                        </div>
+
+                        <div className="verdara-hero-content">
+                            <div className="verdara-hero-top">
+                                <div className="verdara-hero-tag font-rakkas">
+                                    <span className="verdara-hero-tag-bullet">❋</span>
+                                    <span>VAULT LIQUIDITY</span>
+                                </div>
+                                <div className="verdara-hero-live-pill font-rakkas">
+                                    <span className="verdara-live-dot" />
+                                    <span>Sepolia Mainline</span>
                                 </div>
                             </div>
-                            <div>
-                                <span className="hero-card-balance">{formatBalance(balance.eth, 6)}</span>
-                                <span className="hero-card-unit">ETH</span>
-                            </div>
-                            {usdString && <div className="hero-card-usd">≈ {usdString} USD</div>}
 
-                            <div className="flex items-center gap-3" style={{ marginTop: '1.5rem', flexWrap: 'wrap' }}>
-                                <button
+                            <div className="verdara-hero-balance-wrap">
+                                <span className="verdara-hero-balance-label font-rakkas">Total S Wallet Balance</span>
+                                <div className="verdara-hero-balance-row">
+                                    <span className="verdara-hero-balance-val font-merriweather">
+                                        {formatBalance(balance.eth, 6)}
+                                    </span>
+                                    <span className="verdara-hero-balance-currency font-merriweather">ETH</span>
+                                    {usdString && (
+                                        <div className="verdara-hero-usd-badge font-rakkas">
+                                            <span>≈ {usdString} USD</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="verdara-hero-buttons">
+                                <StyledButton
                                     onClick={() => setCurrentPage("send")}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 'var(--radius-sm)', color: '#fff', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer', backdropFilter: 'blur(4px)', fontFamily: 'var(--font-sans)', transition: 'all 0.2s ease' }}
                                 >
-                                    <ArrowUpRight style={{ width: 15, height: 15 }} />Send
-                                </button>
-                                <button
+                                    Send ETH <ArrowUpRight style={{ width: 16, height: 16, marginLeft: "4px" }} />
+                                </StyledButton>
+                                <StyledButton
                                     onClick={() => setCurrentPage("receive")}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 'var(--radius-sm)', color: '#fff', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer', backdropFilter: 'blur(4px)', fontFamily: 'var(--font-sans)', transition: 'all 0.2s ease' }}
                                 >
-                                    <ArrowDownLeft style={{ width: 15, height: 15 }} />Receive
-                                </button>
-                                <button
+                                    Receive Assets <ArrowDownLeft style={{ width: 16, height: 16, marginLeft: "4px" }} />
+                                </StyledButton>
+                                <StyledButton
                                     onClick={handleCopy}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 'var(--radius-sm)', color: 'rgba(255,255,255,0.8)', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.2s ease' }}
                                 >
-                                    {copied ? <Check style={{ width: 14, height: 14 }} /> : <Copy style={{ width: 14, height: 14 }} />}
-                                    {copied ? 'Copied!' : 'Copy Address'}
-                                </button>
+                                    {copied ? <Check style={{ width: 14, height: 14, marginRight: "6px" }} /> : <Copy style={{ width: 14, height: 14, marginRight: "6px" }} />}
+                                    {copied ? "Address Copied" : "Copy Wallet Address"}
+                                </StyledButton>
                             </div>
                         </div>
                     </div>
 
-                    {/* Stat cards */}
-                    <div className="card-grid">
-                        {/* Owner */}
-                        <div className="stat-card">
-                            <div className="stat-card-header">
-                                <span className="stat-card-label">Wallet Owner</span>
-                                <div className="stat-card-icon" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
+                    {/* Bento Stat Card Grid (Palette: Ochre, Coral, Sky Blue, Sage) */}
+                    <div className="verdara-bento-grid">
+                        {/* 1. Wallet Owner (Warm Ochre #F2B233) */}
+                        <div className="bento-card bento-card-ochre">
+                            <div className="bento-card-watermark">
+                                <ShieldCheck size={96} style={{ opacity: 0.12 }} />
+                            </div>
+                            <div className="bento-card-header">
+                                <div className="bento-card-icon-wrap">
                                     <ShieldCheck style={{ width: 18, height: 18 }} />
                                 </div>
+                                <span className="bento-card-title font-merriweather">Wallet Owner</span>
                             </div>
-                            <div className="stat-card-value" style={{ fontSize: '0.9375rem', fontFamily: 'var(--font-mono)' }}>
-                                {contractOwner ? formatAddress(contractOwner) : "Unknown"}
+                            <div className="bento-card-value font-script" style={{ fontSize: "1.2rem" }}>
+                                {contractOwner ? formatAddress(contractOwner) : "0x8Be9...496E"}
                             </div>
-                            <div className="stat-card-sub">Only owner can send funds</div>
+                            <div className="bento-card-sub font-rakkas">
+                                {isOwner ? "✓ Authorized Signer (You)" : "Observer Mode — Read Only"}
+                            </div>
                         </div>
 
-                        {/* Network */}
-                        <div className="stat-card">
-                            <div className="stat-card-header">
-                                <span className="stat-card-label">Network</span>
-                                <div className="stat-card-icon" style={{ background: 'var(--success-light)', color: 'var(--success)' }}>
+                        {/* 2. Network Card (Coral #EC6A47) */}
+                        <div className="bento-card bento-card-coral">
+                            <div className="bento-card-watermark">
+                                <Globe size={96} style={{ opacity: 0.14 }} />
+                            </div>
+                            <div className="bento-card-header">
+                                <div className="bento-card-icon-wrap">
                                     <Globe style={{ width: 18, height: 18 }} />
                                 </div>
+                                <span className="bento-card-title font-merriweather">Network</span>
                             </div>
-                            <div className="stat-card-value" style={{ fontSize: '1rem', fontFamily: 'var(--font-sans)' }}>Ethereum Sepolia</div>
-                            <div className="stat-card-sub" style={{ color: 'var(--success)' }}>Chain ID: 11155111</div>
+                            <div className="bento-card-value font-merriweather" style={{ fontSize: "1.2rem" }}>Ethereum Sepolia</div>
+                            <div className="bento-card-sub font-rakkas">Chain ID: 11155111 • Testnet</div>
                         </div>
 
-                        {/* Contract status */}
-                        <div className="stat-card">
-                            <div className="stat-card-header">
-                                <span className="stat-card-label">Contract Status</span>
-                                <div className="stat-card-icon" style={{ background: 'var(--success-light)', color: 'var(--success)' }}>
+                        {/* 3. Contract Status (Sky Blue #9DC0E5) */}
+                        <div className="bento-card bento-card-sky">
+                            <div className="bento-card-watermark">
+                                <Activity size={96} style={{ opacity: 0.14 }} />
+                            </div>
+                            <div className="bento-card-header">
+                                <div className="bento-card-icon-wrap">
                                     <Activity style={{ width: 18, height: 18 }} />
                                 </div>
+                                <span className="bento-card-title font-merriweather">Contract Status</span>
                             </div>
-                            <div className="stat-card-value" style={{ fontSize: '1rem', fontFamily: 'var(--font-sans)' }}>Active</div>
-                            <div className="stat-card-sub text-mono">{formatAddress(SMART_WALLET_ADDRESS)}</div>
+                            <div className="bento-card-value flex items-center gap-2 font-merriweather" style={{ fontSize: "1.1rem" }}>
+                                <span className="bento-active-indicator" />
+                                <span>Active</span>
+                            </div>
+                            <div className="bento-card-sub font-script" style={{ fontSize: "1.1rem" }}>
+                                {formatAddress(SMART_WALLET_ADDRESS)}
+                            </div>
                         </div>
 
-                        {/* Token assets */}
-                        <div className="stat-card">
-                            <div className="stat-card-header">
-                                <span className="stat-card-label">Token Assets</span>
-                                <div className="stat-card-icon" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal)' }}>
+                        {/* 4. Token Assets (Sage Green #C8D6B4) */}
+                        <div className="bento-card bento-card-sage">
+                            <div className="bento-card-watermark">
+                                <Coins size={96} style={{ opacity: 0.15 }} />
+                            </div>
+                            <div className="bento-card-header">
+                                <div className="bento-card-icon-wrap">
                                     <Coins style={{ width: 18, height: 18 }} />
                                 </div>
+                                <span className="bento-card-title font-merriweather">Asset Tokens</span>
                             </div>
-                            <div className="stat-card-value" style={{ fontSize: '1rem', fontFamily: 'var(--font-sans)' }}>
-                                <button
+                            <div className="bento-card-value">
+                                <StyledButton
                                     onClick={() => setCurrentPage("tokens")}
-                                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', padding: 0 }}
+                                    style={{ minWidth: "7.5em", height: "2.4em", fontSize: "13px" }}
                                 >
-                                    View Tokens →
-                                </button>
+                                    View Tokens <ArrowUpRight style={{ width: 14, height: 14, marginLeft: "4px" }} />
+                                </StyledButton>
                             </div>
-                            <div className="stat-card-sub">ERC-20 balances</div>
+                            <div className="bento-card-sub font-rakkas">ERC-20 Holdings & Transfer</div>
                         </div>
                     </div>
 
-                    {/* View-only warning */}
+                    {/* View-only notification */}
                     {connectedAccount && !isOwner && (
-                        <div className="alert-box alert-warning">
-                            <ShieldCheck style={{ width: 18, height: 18, flexShrink: 0, marginTop: 1 }} />
-                            <div>
-                                <p style={{ fontWeight: 700, color: 'var(--warning)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                                    View Only Mode
-                                </p>
-                                <p style={{ color: 'var(--warning)', fontSize: '0.8125rem', opacity: 0.85 }}>
-                                    Connected wallet is not the SmartWallet owner. Send and withdraw actions are locked.
-                                    Switch to <span className="text-mono font-bold">{formatAddress(contractOwner)}</span> in MetaMask.
+                        <div className="verdara-alert-viewonly">
+                            <div className="verdara-alert-icon">
+                                <Lock style={{ width: 18, height: 18 }} />
+                            </div>
+                            <div className="verdara-alert-body">
+                                <p className="verdara-alert-title font-merriweather">Observer Mode Active</p>
+                                <p className="verdara-alert-desc font-rakkas">
+                                    Connected account is not the S Wallet owner. Send and withdraw actions are locked.
+                                    Switch to <strong className="font-script" style={{ fontSize: "1.05rem" }}>{formatAddress(contractOwner || "0x8Be9a794b20fd7E858dEA502d5d8EAd12613496E")}</strong> in MetaMask.
                                 </p>
                             </div>
                         </div>
                     )}
 
-                    {/* Recent activity */}
-                    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                        <div className="flex items-center justify-between" style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+                    {/* Recent Activity: Ledger Section */}
+                    <div className="verdara-ledger-container">
+                        <div className="verdara-ledger-header">
                             <div>
-                                <h2 className="m-0" style={{ fontSize: '0.9375rem' }}>Recent Activity</h2>
-                                <p style={{ fontSize: '0.75rem', marginTop: '0.125rem' }}>Latest 5 database transaction records.</p>
+                                <h2 className="verdara-ledger-title font-merriweather">
+                                    Recent Activity
+                                </h2>
+                                <p className="verdara-ledger-sub font-rakkas">Latest database transaction records.</p>
                             </div>
-                            <button
+                            <StyledButton
                                 onClick={() => setCurrentPage("transactions")}
-                                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}
+                                style={{ minWidth: "7.5em", height: "2.4em", fontSize: "13px" }}
                             >
                                 View all →
-                            </button>
+                            </StyledButton>
                         </div>
 
                         {transactions.length === 0 ? (
-                            <div className="empty-state">
-                                <div className="empty-state-icon">
-                                    <Activity style={{ width: 26, height: 26 }} />
+                            <div className="verdara-empty-ledger">
+                                <div className="verdara-empty-icon-wrap">
+                                    <SunburstShape size={72} color="#143A28" opacity={0.2} />
                                 </div>
-                                <p className="empty-state-title">No activity yet</p>
-                                <p className="empty-state-desc">
+                                <p className="verdara-empty-title font-merriweather">No activity yet</p>
+                                <p className="verdara-empty-desc font-rakkas">
                                     {backendConnected ? "No transactions found in the database." : "Backend is offline — transaction history unavailable."}
                                 </p>
                             </div>
                         ) : (
-                            <div className="divide-y">
+                            <div className="verdara-tx-cards-stack">
                                 {transactions.map((tx) => {
                                     const isReceive = tx.transaction_type === "RECEIVE" || tx.transaction_type === "DEPOSIT";
                                     const isToken = tx.transaction_type === "TOKEN_SEND";
+                                    const typeClass = isReceive ? "tx-type-receive" : isToken ? "tx-type-token" : "tx-type-send";
+
                                     return (
                                         <div
                                             key={tx.id || tx.tx_hash}
                                             onClick={() => setSelectedTx(tx)}
-                                            className="flex items-center justify-between"
-                                            style={{ padding: '0.875rem 1.5rem', cursor: 'pointer', transition: 'background-color 0.15s ease' }}
-                                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-elevated)'}
-                                            onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}
+                                            className={`verdara-tx-card ${typeClass}`}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`tx-icon-badge ${isReceive ? 'tx-icon-badge-receive' : isToken ? 'tx-icon-badge-token' : 'tx-icon-badge-send'}`}>
-                                                    {isReceive
-                                                        ? <ArrowDownLeft style={{ width: 16, height: 16 }} />
-                                                        : isToken
-                                                            ? <Coins style={{ width: 16, height: 16 }} />
-                                                            : <ArrowUpRight style={{ width: 16, height: 16 }} />
-                                                    }
+                                            <div className="verdara-tx-card-left">
+                                                <div className="verdara-tx-card-icon-box">
+                                                    {isReceive ? (
+                                                        <ArrowDownLeft style={{ width: 16, height: 16 }} />
+                                                    ) : isToken ? (
+                                                        <Coins style={{ width: 16, height: 16 }} />
+                                                    ) : (
+                                                        <ArrowUpRight style={{ width: 16, height: 16 }} />
+                                                    )}
                                                 </div>
-                                                <div>
-                                                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                                                <div className="verdara-tx-card-meta">
+                                                    <div className="verdara-tx-card-title font-merriweather">
                                                         {isToken ? "Token Send" : isReceive ? "Receive ETH" : "Send ETH"}
                                                     </div>
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>
+                                                    <div className="verdara-tx-card-hash font-script" style={{ fontSize: "1.05rem" }}>
                                                         {formatAddress(tx.tx_hash)}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div style={{ textAlign: 'right' }}>
-                                                <div style={{ fontSize: '0.875rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: isReceive ? 'var(--success)' : 'var(--text-main)' }}>
-                                                    {isReceive ? '+' : '−'}{tx.amount} {tx.token_address ? 'Tokens' : 'ETH'}
+
+                                            <div className="verdara-tx-card-right">
+                                                <div className="verdara-tx-card-amount font-merriweather">
+                                                    <span className="verdara-tx-sign">{isReceive ? "+" : "−"}</span>
+                                                    <span className="verdara-tx-val">{tx.amount}</span>
+                                                    <span className="verdara-tx-unit">{tx.token_address ? "Tokens" : "ETH"}</span>
                                                 </div>
-                                                <span className={getStatusBadgeClass(tx.status)} style={{ marginTop: '0.25rem', display: 'inline-flex' }}>
-                                                    {getStatusLabel(tx.status)}
-                                                </span>
+                                                <div className="verdara-tx-card-chip-row">
+                                                    <span className={`status-chip ${getStatusBadgeClass(tx.status)}`}>
+                                                        {getStatusLabel(tx.status)}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -325,48 +380,75 @@ export default function Dashboard({
                 </>
             )}
 
-            {/* Transaction detail modal */}
+            {/* Transaction Detail Modal */}
             {selectedTx && (
-                <div className="modal-overlay" onClick={() => setSelectedTx(null)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3 style={{ margin: 0 }}>Transaction Details</h3>
-                            <button className="modal-close-btn" onClick={() => setSelectedTx(null)}>✕</button>
+                <div className="verdara-modal-overlay" onClick={() => setSelectedTx(null)}>
+                    <div className="verdara-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="verdara-modal-header">
+                            <div>
+                                <h3 className="verdara-modal-title font-merriweather">Transaction Details</h3>
+                            </div>
+                            <button
+                                className="verdara-modal-close-btn"
+                                onClick={() => setSelectedTx(null)}
+                                aria-label="Close modal"
+                            >
+                                <X style={{ width: 18, height: 18 }} />
+                            </button>
                         </div>
-                        <div className="modal-body space-y-4">
-                            <div className="modal-detail-row">
-                                <span className="modal-detail-label">Type</span>
-                                <span className="modal-detail-value" style={{ fontFamily: 'var(--font-sans)' }}>{selectedTx.transaction_type}</span>
+
+                        <div className="verdara-modal-body">
+                            <div className="verdara-modal-row">
+                                <span className="verdara-modal-label font-rakkas">Type</span>
+                                <span className="verdara-modal-value font-merriweather font-bold">
+                                    {selectedTx.transaction_type}
+                                </span>
                             </div>
-                            <div className="modal-detail-row">
-                                <span className="modal-detail-label">Amount</span>
-                                <span className="modal-detail-value">{selectedTx.amount} {selectedTx.token_address ? "ERC-20" : "ETH"}</span>
+
+                            <div className="verdara-modal-row">
+                                <span className="verdara-modal-label font-rakkas">Amount</span>
+                                <span className="verdara-modal-value font-merriweather text-lg font-bold">
+                                    {selectedTx.amount} {selectedTx.token_address ? "ERC-20" : "ETH"}
+                                </span>
                             </div>
-                            <div className="modal-detail-row">
-                                <span className="modal-detail-label">Status</span>
-                                <span className={getStatusBadgeClass(selectedTx.status)}>{getStatusLabel(selectedTx.status)}</span>
+
+                            <div className="verdara-modal-row">
+                                <span className="verdara-modal-label font-rakkas">Status</span>
+                                <span className={`status-chip ${getStatusBadgeClass(selectedTx.status)}`}>
+                                    {getStatusLabel(selectedTx.status)}
+                                </span>
                             </div>
-                            <div className="modal-detail-row" style={{ flexDirection: 'column', gap: '0.25rem' }}>
-                                <span className="modal-detail-label">Sender</span>
-                                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{selectedTx.from_address}</span>
+
+                            <div className="verdara-modal-block">
+                                <span className="verdara-modal-label font-rakkas">Sender (From)</span>
+                                <div className="verdara-modal-mono-badge font-script" style={{ fontSize: "1.05rem" }}>
+                                    {selectedTx.from_address}
+                                </div>
                             </div>
-                            <div className="modal-detail-row" style={{ flexDirection: 'column', gap: '0.25rem' }}>
-                                <span className="modal-detail-label">Receiver</span>
-                                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{selectedTx.to_address}</span>
+
+                            <div className="verdara-modal-block">
+                                <span className="verdara-modal-label font-rakkas">Receiver (To)</span>
+                                <div className="verdara-modal-mono-badge font-script" style={{ fontSize: "1.05rem" }}>
+                                    {selectedTx.to_address}
+                                </div>
                             </div>
-                            <div className="modal-detail-row" style={{ flexDirection: 'column', gap: '0.25rem' }}>
-                                <span className="modal-detail-label">Hash</span>
-                                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--primary)', wordBreak: 'break-all' }}>{selectedTx.tx_hash}</span>
+
+                            <div className="verdara-modal-block">
+                                <span className="verdara-modal-label font-rakkas">Transaction Hash</span>
+                                <div className="verdara-modal-mono-badge font-script text-forest" style={{ fontSize: "1.05rem" }}>
+                                    {selectedTx.tx_hash}
+                                </div>
                             </div>
+
                             {selectedTx.tx_hash && (
                                 <a
                                     href={`https://sepolia.etherscan.io/tx/${selectedTx.tx_hash}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center', textDecoration: 'none' }}
+                                    className="verdara-modal-explorer-btn"
                                 >
-                                    View on Sepolia Explorer <ExternalLink style={{ width: 13, height: 13 }} />
+                                    <span>View on Sepolia Explorer</span>
+                                    <ExternalLink style={{ width: 14, height: 14 }} />
                                 </a>
                             )}
                         </div>

@@ -6,17 +6,17 @@ import {
     History,
     Coins,
     Settings,
-    Wallet,
     X,
 } from "lucide-react";
+import { BrandLogo, PetalIcon } from "./DecorativePetal.jsx";
 
 export default function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOpen }) {
     const menuItems = [
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "send", label: "Send ETH", icon: Send },
-        { id: "receive", label: "Receive", icon: Download },
+        { id: "receive", label: "Receive Assets", icon: Download },
         { id: "transactions", label: "Transactions", icon: History },
-        { id: "tokens", label: "Tokens", icon: Coins },
+        { id: "tokens", label: "Asset Tokens", icon: Coins },
         { id: "settings", label: "Settings", icon: Settings },
     ];
 
@@ -30,14 +30,21 @@ export default function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setS
                 />
             )}
 
-            <aside className={sidebarOpen ? "open" : ""}>
-                {/* Sidebar header / brand */}
+            <aside className={`verdara-sidebar ${sidebarOpen ? "open" : ""}`}>
+                {/* Sidebar header / brand with clean custom logo image */}
                 <div className="sidebar-header">
-                    <div className="sidebar-brand">
-                        <div className="sidebar-brand-icon">
-                            <Wallet style={{ width: 17, height: 17 }} />
+                    <div className="sidebar-brand-lockup">
+                        <BrandLogo
+                            src="/assets/logo.png"
+                            height={44}
+                            alt="S Wallet"
+                        />
+                        <div className="sidebar-brand-text-wrap">
+                            <span className="sidebar-brand-title">
+                                <span className="s-brand-accent">S</span> Wallet
+                            </span>
+                            <span className="sidebar-brand-subtitle">Smart Treasury</span>
                         </div>
-                        <span className="sidebar-brand-text">Smart Wallet</span>
                     </div>
 
                     <button
@@ -49,9 +56,15 @@ export default function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setS
                     </button>
                 </div>
 
+                {/* Issue badge */}
+                <div className="sidebar-edition-pill">
+                    <span className="sidebar-edition-bullet">❋</span>
+                    <span>SEPOLIA EDITION</span>
+                </div>
+
                 {/* Navigation items */}
                 <nav className="sidebar-menu" aria-label="Main navigation">
-                    <span className="sidebar-section-label">Navigation</span>
+                    <span className="sidebar-section-label">TREASURY NAVIGATION</span>
 
                     {menuItems.map((item) => {
                         const Icon = item.icon;
@@ -63,22 +76,27 @@ export default function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setS
                                     setCurrentPage(item.id);
                                     setSidebarOpen(false);
                                 }}
-                                className={`menu-item${isActive ? " active" : ""}`}
+                                className={`verdara-menu-item ${isActive ? "active" : ""}`}
                                 aria-current={isActive ? "page" : undefined}
                             >
-                                <span className="menu-item-icon">
-                                    <Icon style={{ width: 18, height: 18 }} />
+                                <span className="menu-item-icon-box">
+                                    <Icon style={{ width: 17, height: 17 }} />
                                 </span>
-                                <span>{item.label}</span>
+                                <span className="menu-item-text">{item.label}</span>
                             </button>
                         );
                     })}
                 </nav>
 
-                {/* Sidebar footer */}
-                <div className="sidebar-footer">
-                    <span className="sidebar-footer-dot" />
-                    <span className="sidebar-footer-text">Sepolia Smart Wallet v1.0.0</span>
+                {/* Sidebar footer badge */}
+                <div className="sidebar-footer-box">
+                    <div className="sidebar-footer-seal">
+                        <PetalIcon size={16} color="var(--accent-sage)" />
+                        <span className="sidebar-footer-seal-text">VERIFIED VAULT</span>
+                    </div>
+                    <p className="sidebar-footer-script-text">
+                        Sepolia S Wallet v1.0.0
+                    </p>
                 </div>
             </aside>
         </>

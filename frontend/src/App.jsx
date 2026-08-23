@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Header from "./components/Header.jsx";
 import Sidebar from "./components/Sidebar.jsx";
+import Footer from "./components/Footer.jsx";
+import { DecorativePetalBg } from "./components/DecorativePetal.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Send from "./pages/Send.jsx";
 import Receive from "./pages/Receive.jsx";
@@ -203,7 +205,9 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className="verdara-app-root">
+      <DecorativePetalBg />
+
       <Header
         connectedAccount={connectedAccount}
         isOwner={isOwner}
@@ -214,7 +218,7 @@ export default function App() {
         setSidebarOpen={setSidebarOpen}
       />
 
-      <div className={`main-layout ${sidebarOpen ? "aside-open" : ""}`}>
+      <div className={`verdara-main-layout ${sidebarOpen ? "aside-open" : ""}`}>
         <Sidebar
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
@@ -222,9 +226,13 @@ export default function App() {
           setSidebarOpen={setSidebarOpen}
         />
 
-        <main className="content-area">
-          {renderActivePage()}
-        </main>
+        <div className="verdara-content-column">
+          <main className="verdara-content-area">
+            {renderActivePage()}
+          </main>
+
+          <Footer setCurrentPage={setCurrentPage} />
+        </div>
       </div>
 
       <ToastContainer toasts={toasts} onClose={removeToast} />

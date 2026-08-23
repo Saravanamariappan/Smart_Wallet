@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { isAddress } from "viem";
-import { ShieldAlert, ArrowRight, CheckCircle2, Loader2, AlertCircle, Check } from "lucide-react";
+import { ShieldAlert, ArrowRight, CheckCircle2, Loader2, AlertCircle, Check, ArrowUpRight } from "lucide-react";
 import { formatAddress, formatBalance } from "../utils/format.js";
 import { sendETH, waitForTransaction, getSmartWalletBalance } from "../services/blockchain.js";
 import { saveTransaction, verifyTransaction } from "../services/api.js";
-import { SMART_WALLET_ADDRESS, CHAIN_ID } from "../config/wallet.js";
+import { SMART_WALLET_ADDRESS } from "../config/wallet.js";
+import { PetalIcon, SunburstShape } from "../components/DecorativePetal.jsx";
+import StyledButton from "../components/StyledButton.jsx";
 
 function StepIndicator({ step }) {
     const steps = [
@@ -14,24 +16,20 @@ function StepIndicator({ step }) {
         { n: 4, label: "Done" },
     ];
     return (
-        <div style={{ marginBottom: '2rem' }}>
-            <div className="step-indicator">
+        <div className="verdara-steps-container">
+            <div className="verdara-steps-track">
                 {steps.map((s, i) => (
                     <React.Fragment key={s.n}>
-                        <div className={`step-dot ${step === s.n ? 'active' : step > s.n ? 'done' : ''}`}>
-                            {step > s.n ? <Check style={{ width: 12, height: 12 }} /> : s.n}
+                        <div className={`verdara-step-node ${step === s.n ? 'active' : step > s.n ? 'done' : ''}`}>
+                            <div className="verdara-step-circle">
+                                {step > s.n ? <Check style={{ width: 12, height: 12 }} /> : s.n}
+                            </div>
+                            <span className="verdara-step-label font-rakkas">{s.label}</span>
                         </div>
                         {i < steps.length - 1 && (
-                            <div className={`step-line ${step > s.n ? 'done' : ''}`} />
+                            <div className={`verdara-step-line ${step > s.n ? 'done' : ''}`} />
                         )}
                     </React.Fragment>
-                ))}
-            </div>
-            <div className="flex" style={{ justifyContent: 'space-between', marginTop: '0.375rem' }}>
-                {steps.map(s => (
-                    <span key={s.n} style={{ fontSize: '0.625rem', fontWeight: 600, color: step === s.n ? 'var(--primary)' : 'var(--text-subtle)', textAlign: 'center', flex: 1, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                        {s.label}
-                    </span>
                 ))}
             </div>
         </div>
@@ -63,9 +61,9 @@ export default function Send({ connectedAccount, isOwner, chainId, backendConnec
     const validateForm = () => {
         if (!connectedAccount) { setErrorMessage("Please connect your MetaMask wallet."); return false; }
         if (!isSepolia) { setErrorMessage("Please switch to Sepolia Testnet."); return false; }
-        if (!isOwner) { setErrorMessage("Only the SmartWallet owner can carry out this transaction."); return false; }
+        if (!isOwner) { setErrorMessage("Only the S Wallet owner can carry out this transaction."); return false; }
         if (!receiver || !isAddress(receiver)) { setErrorMessage("Please enter a valid Ethereum recipient address."); return false; }
-        if (receiver.toLowerCase() === SMART_WALLET_ADDRESS.toLowerCase()) { setErrorMessage("Cannot send ETH back to the SmartWallet itself."); return false; }
+        if (receiver.toLowerCase() === SMART_WALLET_ADDRESS.toLowerCase()) { setErrorMessage("Cannot send ETH back to the S Wallet itself."); return false; }
         const val = parseFloat(amount);
         if (isNaN(val) || val <= 0) { setErrorMessage("Please enter an amount greater than 0 ETH."); return false; }
         if (val > parseFloat(smartWalletBalance)) { setErrorMessage(`Insufficient balance. Current: ${smartWalletBalance} ETH.`); return false; }
@@ -108,149 +106,234 @@ export default function Send({ connectedAccount, isOwner, chainId, backendConnec
     const handleReset = () => { setReceiver(""); setAmount(""); setStep(1); setTxHash(""); setErrorMessage(""); };
 
     return (
-        <div className="page-enter" style={{ maxWidth: 640, margin: '0 auto' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
-                <h1 className="m-0">Send ETH</h1>
-                <p className="page-subtitle">Transfer Sepolia Ether from the Smart Wallet to any address.</p>
+        <div className="page-enter verdara-form-page-container">
+            {/* Header */}
+            <div className="verdara-page-header text-center-mobile">
+                <div>
+                    <div className="verdara-page-tag font-rakkas">
+                        <PetalIcon size={13} color="var(--primary-dark)" />
+                        <span>OUTBOUND DISBURSEMENT</span>
+                    </div>
+                    <h1 className="verdara-page-title font-merriweather">
+                        Send ETH
+                    </h1>
+                    <p className="verdara-page-subtitle font-rakkas">
+                        Transfer Sepolia Ether from the S Wallet to any address.
+                    </p>
+                </div>
             </div>
 
             {/* Owner warning */}
             {!isOwner && connectedAccount && (
-                <div className="alert-box alert-danger" style={{ marginBottom: '1.5rem' }}>
-                    <ShieldAlert style={{ width: 18, height: 18, flexShrink: 0, marginTop: 1 }} />
-                    <div>
-                        <p style={{ fontWeight: 700, fontSize: '0.875rem', marginBottom: '0.25rem' }}>Sending Disabled</p>
-                        <p style={{ fontSize: '0.8125rem', opacity: 0.85 }}>
-                            Only the owner (<span className="text-mono font-bold">{formatAddress("0x8Be9a794b20fd7E858dEA502d5d8EAd12613496E")}</span>) can sign transactions.
+                <div className="verdara-alert-viewonly" style={{ marginBottom: "1.5rem" }}>
+                    <div className="verdara-alert-icon">
+                        <ShieldAlert style={{ width: 18, height: 18 }} />
+                    </div>
+                    <div className="verdara-alert-body">
+                        <p className="verdara-alert-title font-merriweather">Sending Disabled</p>
+                        <p className="verdara-alert-desc font-rakkas">
+                            Only the owner (<strong className="font-script" style={{ fontSize: "1.05rem" }}>{formatAddress("0x8Be9a794b20fd7E858dEA502d5d8EAd12613496E")}</strong>) can sign transactions.
                         </p>
                     </div>
                 </div>
             )}
 
-            {/* Main Card */}
-            <div className="card" style={{ padding: '2rem' }}>
-                <StepIndicator step={step} />
+            {/* Newsletter-styled Dark Forest Green Form Container */}
+            <div className="verdara-newsletter-card">
+                <div className="verdara-newsletter-watermark">
+                    <SunburstShape size={360} color="#C8D6B4" opacity={0.05} />
+                </div>
 
-                {step === 1 && (
-                    <form onSubmit={handleReview}>
-                        {/* Balance row */}
-                        <div className="flex items-center justify-between" style={{ padding: '0.875rem 1rem', background: 'var(--primary-light)', border: '1px solid var(--primary-border)', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Available Balance</span>
-                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--primary)' }}>{formatBalance(smartWalletBalance, 6)} ETH</span>
-                        </div>
+                <div className="verdara-newsletter-inner">
+                    <StepIndicator step={step} />
 
-                        <div className="form-group">
-                            <label htmlFor="receiver" className="form-label">Recipient Address</label>
-                            <input
-                                id="receiver"
-                                type="text"
-                                value={receiver}
-                                onChange={e => setReceiver(e.target.value)}
-                                placeholder="0x..."
+                    {step === 1 && (
+                        <form onSubmit={handleReview} className="verdara-form-body">
+                            {/* Available Balance Pill Banner */}
+                            <div className="verdara-balance-banner">
+                                <div className="verdara-balance-banner-left font-rakkas">
+                                    <PetalIcon size={14} color="var(--accent-sage)" />
+                                    <span>AVAILABLE BALANCE</span>
+                                </div>
+                                <span className="verdara-balance-banner-val font-merriweather">
+                                    {formatBalance(smartWalletBalance, 6)} ETH
+                                </span>
+                            </div>
+
+                            {/* Recipient Input */}
+                            <div className="verdara-field-group">
+                                <label htmlFor="receiver" className="verdara-field-label font-rakkas">
+                                    Recipient Address
+                                </label>
+                                <div className="verdara-input-wrap">
+                                    <input
+                                        id="receiver"
+                                        type="text"
+                                        value={receiver}
+                                        onChange={(e) => setReceiver(e.target.value)}
+                                        placeholder="0x..."
+                                        disabled={!isOwner || !isSepolia}
+                                        className="verdara-pill-input font-script"
+                                        style={{ fontSize: "1.1rem" }}
+                                    />
+                                </div>
+                                <span className="verdara-field-help font-rakkas">
+                                    Enter a valid 42-character hexadecimal Ethereum address.
+                                </span>
+                            </div>
+
+                            {/* Amount Input */}
+                            <div className="verdara-field-group">
+                                <div className="flex justify-between items-center mb-1">
+                                    <label htmlFor="amount" className="verdara-field-label font-rakkas">
+                                        Transfer Amount
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setAmount(smartWalletBalance)}
+                                        className="verdara-max-btn font-sans"
+                                        disabled={!isOwner || !isSepolia}
+                                    >
+                                        Use Max
+                                    </button>
+                                </div>
+                                <div className="verdara-input-wrap-addon">
+                                    <input
+                                        id="amount"
+                                        type="number"
+                                        step="any"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        placeholder="0.00"
+                                        disabled={!isOwner || !isSepolia}
+                                        className="verdara-pill-input font-merriweather"
+                                    />
+                                    <span className="verdara-input-addon font-sans font-bold">ETH</span>
+                                </div>
+                            </div>
+
+                            {errorMessage && (
+                                <div className="verdara-form-error font-rakkas">
+                                    <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+                                    <span>{errorMessage}</span>
+                                </div>
+                            )}
+
+                            <StyledButton
+                                type="submit"
                                 disabled={!isOwner || !isSepolia}
-                                className={`form-input text-mono ${errorMessage && !isAddress(receiver || '') && receiver ? 'form-input-error' : ''}`}
-                            />
-                        </div>
+                                style={{ width: "100%" }}
+                            >
+                                Review Transaction <ArrowRight style={{ width: 17, height: 17, marginLeft: "6px" }} />
+                            </StyledButton>
 
-                        <div className="form-group">
-                            <label htmlFor="amount" className="form-label">Transfer Amount</label>
-                            <div className="form-input-addon-wrapper">
-                                <input
-                                    id="amount"
-                                    type="number"
-                                    step="any"
-                                    value={amount}
-                                    onChange={e => setAmount(e.target.value)}
-                                    placeholder="0.00"
-                                    disabled={!isOwner || !isSepolia}
-                                    className="form-input"
-                                    style={{ paddingRight: '3.5rem' }}
-                                />
-                                <span className="form-input-addon">ETH</span>
-                            </div>
-                        </div>
-
-                        {errorMessage && (
-                            <div className="alert-box alert-danger" style={{ marginBottom: '1.25rem', padding: '0.75rem 1rem' }}>
-                                <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
-                                <span style={{ fontSize: '0.8125rem' }}>{errorMessage}</span>
-                            </div>
-                        )}
-
-                        <button type="submit" disabled={!isOwner || !isSepolia} className="btn btn-primary">
-                            Review Transaction
-                            <ArrowRight style={{ width: 16, height: 16 }} />
-                        </button>
-                    </form>
-                )}
-
-                {step === 2 && (
-                    <div>
-                        <h2 style={{ marginBottom: '1.25rem', fontSize: '0.9375rem' }}>Review Transaction</h2>
-                        <div className="divide-y" style={{ marginBottom: '1.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                            <div className="modal-detail-row" style={{ padding: '0.875rem 1rem' }}>
-                                <span className="modal-detail-label">Recipient</span>
-                                <span className="modal-detail-value" style={{ fontSize: '0.75rem' }}>{receiver}</span>
-                            </div>
-                            <div className="modal-detail-row" style={{ padding: '0.875rem 1rem' }}>
-                                <span className="modal-detail-label">Amount</span>
-                                <span className="modal-detail-value text-primary font-bold">{amount} ETH</span>
-                            </div>
-                            <div className="modal-detail-row" style={{ padding: '0.875rem 1rem' }}>
-                                <span className="modal-detail-label">Network</span>
-                                <span className="badge badge-success">Sepolia Testnet</span>
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <button onClick={() => setStep(1)} className="btn btn-secondary" style={{ flex: 1 }}>Back</button>
-                            <button onClick={handleSend} className="btn btn-primary" style={{ flex: 1 }}>
-                                Confirm & Send via MetaMask
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {step === 3 && (
-                    <div className="flex flex-col items-center justify-center" style={{ padding: '3rem 0', gap: '1rem', textAlign: 'center' }}>
-                        <Loader2 style={{ width: 40, height: 40, color: 'var(--primary)', animation: 'spin 0.7s linear infinite' }} />
-                        <h3>Executing Smart Contract Call</h3>
-                        <p style={{ fontSize: '0.8125rem', maxWidth: '28ch' }}>{statusMessage}</p>
-                        {txHash && (
-                            <span className="badge badge-primary text-mono" style={{ fontSize: '0.7rem' }}>
-                                {formatAddress(txHash)}
-                            </span>
-                        )}
-                    </div>
-                )}
-
-                {step === 4 && (
-                    <div className="flex flex-col items-center justify-center" style={{ padding: '2rem 0', gap: '1.25rem', textAlign: 'center' }}>
-                        <div style={{ width: 56, height: 56, background: 'var(--success-light)', border: '2px solid var(--success-border)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <CheckCircle2 style={{ width: 28, height: 28, color: 'var(--success)' }} />
-                        </div>
-                        <div>
-                            <h3 style={{ color: 'var(--success)' }}>Transaction Successful</h3>
-                            <p style={{ fontSize: '0.8125rem', marginTop: '0.375rem', maxWidth: '32ch' }}>
-                                Successfully sent {amount} ETH from the Smart Wallet.
+                            <p className="verdara-form-footer-note font-rakkas">
+                                ❋ Transactions are irreversible once executed on Ethereum Sepolia.
                             </p>
-                        </div>
-                        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1rem', width: '100%', maxWidth: 380, textAlign: 'left' }}>
-                            <div className="modal-detail-row" style={{ padding: '0.375rem 0', borderTop: 'none' }}>
-                                <span className="modal-detail-label" style={{ fontSize: '0.75rem' }}>Recipient</span>
-                                <span className="modal-detail-value" style={{ fontSize: '0.75rem' }}>{formatAddress(receiver)}</span>
+                        </form>
+                    )}
+
+                    {step === 2 && (
+                        <div className="verdara-review-container">
+                            <div className="verdara-review-header">
+                                <h3 className="verdara-review-title font-merriweather">Review Transaction</h3>
+                                <p className="verdara-review-sub font-rakkas">Please check the transaction details before signing in MetaMask.</p>
                             </div>
-                            <div className="modal-detail-row" style={{ padding: '0.375rem 0' }}>
-                                <span className="modal-detail-label" style={{ fontSize: '0.75rem' }}>Tx Hash</span>
-                                <a href={`https://sepolia.etherscan.io/tx/${txHash}`} target="_blank" rel="noreferrer" className="modal-detail-value" style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>
-                                    {formatAddress(txHash)}
-                                </a>
+
+                            <div className="verdara-review-manifest">
+                                <div className="verdara-manifest-row">
+                                    <span className="verdara-manifest-lbl font-rakkas">Recipient</span>
+                                    <span className="verdara-manifest-val font-script" style={{ fontSize: "1.1rem" }}>{receiver}</span>
+                                </div>
+                                <div className="verdara-manifest-row">
+                                    <span className="verdara-manifest-lbl font-rakkas">Amount</span>
+                                    <span className="verdara-manifest-val-highlight font-merriweather">
+                                        {amount} ETH
+                                    </span>
+                                </div>
+                                <div className="verdara-manifest-row">
+                                    <span className="verdara-manifest-lbl font-rakkas">Network</span>
+                                    <span className="verdara-manifest-tag font-sans">Sepolia Testnet</span>
+                                </div>
+                                <div className="verdara-manifest-row">
+                                    <span className="verdara-manifest-lbl font-rakkas">S Wallet Vault</span>
+                                    <span className="verdara-manifest-val font-script" style={{ fontSize: "1.1rem" }}>{formatAddress(SMART_WALLET_ADDRESS)}</span>
+                                </div>
+                            </div>
+
+                            <div className="verdara-review-actions" style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                                <StyledButton
+                                    onClick={() => setStep(1)}
+                                    style={{ flex: 1 }}
+                                >
+                                    ← Back
+                                </StyledButton>
+                                <StyledButton
+                                    onClick={handleSend}
+                                    style={{ flex: 2 }}
+                                >
+                                    Submit MetaMask Signature →
+                                </StyledButton>
                             </div>
                         </div>
-                        <button onClick={handleReset} className="btn btn-secondary btn-sm" style={{ width: 'auto', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
-                            Send Another
-                        </button>
-                    </div>
-                )}
+                    )}
+
+                    {step === 3 && (
+                        <div className="verdara-processing-container">
+                            <div className="verdara-spin-seal">
+                                <Loader2 style={{ width: 44, height: 44, color: "var(--accent-sage)", animation: "spin 0.8s linear infinite" }} />
+                            </div>
+                            <h3 className="verdara-processing-title font-merriweather">Executing Smart Contract Call</h3>
+                            <p className="verdara-processing-desc font-rakkas">{statusMessage}</p>
+                            {txHash && (
+                                <div className="verdara-tx-hash-pill font-script" style={{ fontSize: "1.05rem" }}>
+                                    <span>Tx:</span> {formatAddress(txHash)}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {step === 4 && (
+                        <div className="verdara-success-container">
+                            <div className="verdara-success-seal">
+                                <CheckCircle2 style={{ width: 36, height: 36, color: "var(--primary-dark)" }} />
+                            </div>
+                            <div className="text-center">
+                                <h3 className="verdara-success-title font-merriweather">Transaction Successful</h3>
+                                <p className="verdara-success-desc font-rakkas">
+                                    Successfully sent <strong>{amount} ETH</strong> from the S Wallet.
+                                </p>
+                            </div>
+
+                            <div className="verdara-receipt-box">
+                                <div className="verdara-receipt-row">
+                                    <span className="verdara-receipt-label font-rakkas">Recipient</span>
+                                    <span className="verdara-receipt-val font-script" style={{ fontSize: "1.05rem" }}>{formatAddress(receiver)}</span>
+                                </div>
+                                <div className="verdara-receipt-row">
+                                    <span className="verdara-receipt-label font-rakkas">Tx Hash</span>
+                                    <a
+                                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="verdara-receipt-link font-script"
+                                        style={{ fontSize: "1.05rem" }}
+                                    >
+                                        <span>{formatAddress(txHash)}</span>
+                                        <ArrowUpRight style={{ width: 12, height: 12 }} />
+                                    </a>
+                                </div>
+                            </div>
+
+                            <StyledButton
+                                onClick={handleReset}
+                                style={{ marginTop: "1rem" }}
+                            >
+                                Send Another →
+                            </StyledButton>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
