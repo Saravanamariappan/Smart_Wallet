@@ -2,10 +2,10 @@ import React, { useState } from "react";
 
 /**
  * BrandLogo - Clean transparent custom logo image component
- * References /assets/logo.png with graceful fallback (hides on error to prevent broken image icon)
+ * References /assets/new.jpg with graceful fallback (hides on error to prevent broken image icon)
  */
 export function BrandLogo({
-  src = "/assets/logo.png",
+  src = "/assets/new.jpg",
   alt = "S Wallet Logo",
   height = 36,
   className = "",
@@ -17,6 +17,8 @@ export function BrandLogo({
     return null;
   }
 
+  const computedHeight = typeof height === "number" ? `${height}px` : height;
+
   return (
     <img
       src={src}
@@ -24,9 +26,11 @@ export function BrandLogo({
       onError={() => setHasError(true)}
       className={`s-wallet-custom-logo ${className}`}
       style={{
-        height: typeof height === "number" ? `${height}px` : height,
-        width: "auto",
-        objectFit: "contain",
+        height: computedHeight,
+        width: computedHeight,
+        aspectRatio: "1 / 1",
+        objectFit: "cover",
+        borderRadius: "50%",
         display: "inline-block",
         background: "transparent",
         backgroundColor: "transparent",
@@ -51,7 +55,7 @@ export function SLogoMark({ size = 32, className = "", style = {} }) {
  * Logo size: Sidebar (~44px), Navbar (~30px), Mobile (~28px)
  */
 export function SWalletBrand({ size = "md", light = false, className = "" }) {
-  const logoHeight = size === "lg" ? 44 : size === "sm" ? 28 : 30;
+  const logoHeight = size === "lg" ? 52 : size === "sm" ? 38 : 48;
 
   return (
     <div className={`s-wallet-brand-lockup ${className} brand-${size}`}>

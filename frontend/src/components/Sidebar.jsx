@@ -35,7 +35,7 @@ export default function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setS
                 <div className="sidebar-header">
                     <div className="sidebar-brand-lockup">
                         <BrandLogo
-                            src="/assets/logo.png"
+                            src="/assets/new.jpg"
                             height={44}
                             alt="S Wallet"
                         />

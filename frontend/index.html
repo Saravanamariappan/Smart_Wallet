@@ -2,11 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/assets/logo.png" />
-    <link rel="alternate icon" type="image/png" href="/favicon.png" />
-    <meta property="og:image" content="/assets/logo.png" />
+    <link rel="icon" type="image/jpeg" sizes="any" href="/assets/new.jpg" />
+    <link rel="apple-touch-icon" href="/assets/new.jpg" />
+    <meta property="og:image" content="/assets/new.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="/assets/logo.png" />
+    <meta name="twitter:image" content="/assets/new.jpg" />
+    <script>
+      (function() {
+        const img = new Image();
+        img.src = '/assets/new.jpg';
+        img.onload = function() {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.beginPath();
+            ctx.arc(32, 32, 32, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(img, 0, 0, 64, 64);
+            const dataUrl = canvas.toDataURL('image/png');
+            const icons = document.querySelectorAll("link[rel*='icon']");
+            icons.forEach(function(el) { el.href = dataUrl; el.type = 'image/png'; });
+          } catch (e) {}
+        };
+      })();
+    </script>
     <meta name="theme-color" content="#143A28" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>S Wallet</title>
